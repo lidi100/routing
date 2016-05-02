@@ -44,10 +44,7 @@ namespace OsmSharp.Routing.Osm.Relations
 
         static Action<Way, TagsCollectionBase> AddTags = (w, t) =>
         {
-            foreach (var tag in t)
-            {
-                w.Tags.AddOrReplace("cn_" + tag.Key, tag.Value);
-            }
+            w.Tags.AddOrReplace("cyclenetwork", "yes");
         };
 
         /// <summary>
@@ -59,12 +56,9 @@ namespace OsmSharp.Routing.Osm.Relations
             {
                 return (after, before) =>
                 {
-                    foreach (var t in before)
+                    if (before.ContainsKeyValue("cyclenetwork", "yes"))
                     {
-                        if (t.Key.StartsWith("cn_"))
-                        {
-                            after.Add(t);
-                        }
+                        after.AddOrReplace("cyclenetwork", "yes");
                     }
                 };
             }

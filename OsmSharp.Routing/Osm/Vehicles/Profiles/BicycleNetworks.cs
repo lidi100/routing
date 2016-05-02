@@ -64,7 +64,7 @@ namespace OsmSharp.Routing.Osm.Vehicles.Profiles
                 var highwayType = string.Empty;
                 foreach (var tag in tags)
                 {
-                    if (tag.Key.StartsWith("cn_"))
+                    if (tag.Key.StartsWith("cyclenetwork"))
                     { // use for all cycle networks the best factor.
                         // THIS IS THE PLACE TO IMPLEMENT NETWORK-SPECIFIC WEIGHTS.
                         speed.Value = speed.Value * CYCLE_NETWORK_PREFER_FACTOR;

@@ -15,7 +15,7 @@ namespace OsmSharp.Routing.Test.Functional
         public static void ExperimentHere()
         {
             var routerDb = new RouterDb();
-            routerDb.LoadOsmData(File.OpenRead(@"D:\work\data\OSM\kempen-big.osm.pbf"), Vehicle.Car, Vehicle.Bicycle);
+            routerDb.LoadOsmData(File.OpenRead(@"D:\work\data\OSM\planet\europe\belgium-latest.osm.pbf"), Vehicle.Car, Vehicle.Bicycle);
 
             var router = new Router(routerDb);
             

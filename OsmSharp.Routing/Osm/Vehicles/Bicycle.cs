@@ -139,7 +139,7 @@ namespace OsmSharp.Routing.Osm.Vehicles
                 return true;
             }
 
-            if (key.StartsWith("cn_"))
+            if (key.StartsWith("cyclenetwork"))
             { // also make sure to include all cyclenetwork tags!
                 return true;
             }
@@ -156,7 +156,7 @@ namespace OsmSharp.Routing.Osm.Vehicles
                 return true;
             }
 
-            if (key.StartsWith("cn_"))
+            if (key.StartsWith("cyclenetwork"))
             { // also make sure to include all cyclenetwork tags!
                 return true;
             }
