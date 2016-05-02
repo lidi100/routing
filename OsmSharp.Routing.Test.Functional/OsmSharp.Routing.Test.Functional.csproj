@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConsoleTraceListener.cs" />
+    <Compile Include="Experiment.cs" />
     <Compile Include="PerformanceInfoConsumer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

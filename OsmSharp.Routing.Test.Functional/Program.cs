@@ -38,6 +38,9 @@ namespace OsmSharp.Routing.Test.Functional
 
             OsmSharp.Routing.Osm.Vehicles.Vehicle.RegisterVehicles();
 
+#if DEBUG
+            Experiment.ExperimentHere(); // only called in debug for quick experiments.
+#endif
             // download and extract test-data.
             Console.WriteLine("Downloading Belgium...");
             Download.DownloadBelgiumAll();

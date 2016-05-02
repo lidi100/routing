@@ -130,14 +130,34 @@ namespace OsmSharp.Routing.Osm.Vehicles
         }
 
         /// <summary>
-        /// Ret
+        /// Returns true if the given key is relevant.
         /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
+        public override bool IsRelevant(string key)
+        {
+            if (base.IsRelevant(key))
+            {
+                return true;
+            }
+
+            if (key.StartsWith("cn_"))
+            { // also make sure to include all cyclenetwork tags!
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if the given key is valid for profile.
+        /// </summary>
         public override bool IsRelevantForProfile(string key)
         {
-            if(base.IsRelevantForProfile(key))
+            if (base.IsRelevantForProfile(key))
             {
+                return true;
+            }
+
+            if (key.StartsWith("cn_"))
+            { // also make sure to include all cyclenetwork tags!
                 return true;
             }
             return key == "ramp";
@@ -222,7 +242,8 @@ namespace OsmSharp.Routing.Osm.Vehicles
             {
                 this.Fastest(),
                 this.Shortest(),
-                this.Balanced()
+                this.Balanced(),
+                this.Networks()
             };
         }
 
@@ -233,6 +254,15 @@ namespace OsmSharp.Routing.Osm.Vehicles
         public Routing.Profiles.Profile Balanced()
         {
             return new Profiles.BicycleBalanced(this);
+        }
+
+        /// <summary>
+        /// Returns a profile specifically for bicycles that uses cycling networks as much as possible. Behaves as balanced in the absences of cycling network data.
+        /// </summary>
+        /// <returns></returns>
+        public Routing.Profiles.Profile Networks()
+        {
+            return new Profiles.BicycleNetworks(this);
         }
     }
 }

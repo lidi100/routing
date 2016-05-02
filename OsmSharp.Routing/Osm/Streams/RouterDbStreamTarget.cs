@@ -16,7 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with OsmSharp. If not, see <http://www.gnu.org/licenses/>.
 
-using OsmSharp.Collections;
 using OsmSharp.Collections.LongIndex;
 using OsmSharp.Collections.LongIndex.LongIndex;
 using OsmSharp.Collections.Tags;
@@ -27,6 +26,7 @@ using OsmSharp.Osm;
 using OsmSharp.Osm.Streams;
 using OsmSharp.Routing.Network;
 using OsmSharp.Routing.Network.Data;
+using OsmSharp.Routing.Osm.Relations;
 using OsmSharp.Routing.Osm.Vehicles;
 using System;
 using System.Collections.Generic;
@@ -50,7 +50,7 @@ namespace OsmSharp.Routing.Osm.Streams
         /// Creates a new router db stream target.
         /// </summary>
         public RouterDbStreamTarget(RouterDb db, Vehicle[] vehicles, bool allCore = false,
-            int minimumStages = 1, bool normalizeTags = true)
+            int minimumStages = 1, bool normalizeTags = true, IEnumerable<ITwoPassProcessor> processors = null)
         {
             _db = db;
             _vehicles = vehicles;
@@ -76,6 +76,14 @@ namespace OsmSharp.Routing.Osm.Streams
                     db.AddSupportedProfile(profiles);
                 }
             }
+
+            if (processors == null)
+            {
+                processors = new List<ITwoPassProcessor>();
+            }
+            this.Processors = new List<ITwoPassProcessor>(processors);
+
+            this.InitializeDefaultProcessors();
         }
 
         private bool _firstPass = true; // flag for first/second pass.
@@ -91,6 +99,19 @@ namespace OsmSharp.Routing.Osm.Streams
             _maxLatitude = double.MinValue, _maxLongitude = double.MinValue;
         private List<GeoCoordinateBox> _stages = new List<GeoCoordinateBox>();
         private int _stage = -1;
+        
+        /// <summary>
+        /// Setups default add-on processors.
+        /// </summary>
+        private void InitializeDefaultProcessors()
+        {
+            // check for bicycle profile and add cycle network processor by default.
+            if(_vehicles.FirstOrDefault(x => x.UniqueName == "Bicycle") != null &&
+               this.Processors.FirstOrDefault(x => x.GetType().Equals(typeof(CycleNetworkProcessor))) == null)
+            { // bicycle profile present and processor not there yet, add it here.
+                this.Processors.Add(new CycleNetworkProcessor());
+            }
+        }
 
         /// <summary>
         /// Intializes this target.
@@ -107,7 +128,7 @@ namespace OsmSharp.Routing.Osm.Streams
         public override bool OnBeforePull()
         {
             // execute the first pass but ignore nodes.
-            this.DoPull(false, false, true);
+            this.DoPull(false, false, false);
 
             // move to first stage and initial first pass.
             _stage = 0;
@@ -123,6 +144,11 @@ namespace OsmSharp.Routing.Osm.Streams
 
             return false;
         }
+
+        /// <summary>
+        /// Gets or sets extra two-pass processors.
+        /// </summary>
+        public List<ITwoPassProcessor> Processors { get; set; }
 
         /// <summary>
         /// Registers the source.
@@ -201,9 +227,25 @@ namespace OsmSharp.Routing.Osm.Streams
                 {
                     _maxLongitude = longitude;
                 }
+
+                if (this.Processors != null)
+                {
+                    foreach (var processor in this.Processors)
+                    {
+                        processor.FirstPass(node);
+                    }
+                }
             }
             else
             {
+                if (this.Processors != null)
+                {
+                    foreach (var processor in this.Processors)
+                    {
+                        processor.SecondPass(node);
+                    }
+                }
+
                 if (_stages[_stage].Contains(node.Longitude.Value, node.Latitude.Value) ||
                     _anyStageNodes.Contains(node.Id.Value))
                 {
@@ -230,6 +272,14 @@ namespace OsmSharp.Routing.Osm.Streams
 
             if (_firstPass)
             { // just keep.
+                if (this.Processors != null)
+                {
+                    foreach (var processor in this.Processors)
+                    {
+                        processor.FirstPass(way);
+                    }
+                }
+
                 // check boundingbox and node count and descide on # stages.                    
                 var box = new GeoCoordinateBox(
                     new GeoCoordinate(_minLatitude, _minLongitude),
@@ -306,6 +356,14 @@ namespace OsmSharp.Routing.Osm.Streams
             }
             else
             {
+                if (this.Processors != null)
+                {
+                    foreach (var processor in this.Processors)
+                    {
+                        processor.SecondPass(way);
+                    }
+                }
+
                 if (_vehicles.AnyCanTraverse(way.Tags))
                 { // way has some use.
                     if (_processedWays.Contains(way.Id.Value))
@@ -334,6 +392,17 @@ namespace OsmSharp.Routing.Osm.Streams
                         if (!profileTags.Normalize(normalizedProfileTags, metaTags, _vehicles))
                         { // invalid data, no access, or tags make no sense at all.
                             return;
+                        }
+                        if (this.Processors != null)
+                        { // given processors a chance to keep extra custom tags.
+                            foreach(var processor in this.Processors)
+                            {
+                                var onAfterNormalize = processor.OnAfterWayTagsNormalize;
+                                if (onAfterNormalize != null)
+                                {
+                                    onAfterNormalize(normalizedProfileTags, profileTags);
+                                }
+                            }
                         }
                         profileTags = normalizedProfileTags;
                     }
@@ -677,9 +746,28 @@ namespace OsmSharp.Routing.Osm.Streams
         /// <summary>
         /// Adds a relation.
         /// </summary>
-        public override void AddRelation(Relation simpleRelation)
+        public override void AddRelation(Relation relation)
         {
-
+            if (_firstPass)
+            {
+                if (this.Processors != null)
+                {
+                    foreach (var processor in this.Processors)
+                    {
+                        processor.FirstPass(relation);
+                    }
+                }
+            }
+            else
+            {
+                if (this.Processors != null)
+                {
+                    foreach (var processor in Processors)
+                    {
+                        processor.SecondPass(relation);
+                    }
+                }
+            }
         }
 
         /// <summary>

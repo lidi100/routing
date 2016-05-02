@@ -121,11 +121,15 @@
     <Compile Include="Network\RoutingNetworkProfile.cs" />
     <Compile Include="Osm\HighwayComparer.cs" />
     <Compile Include="Osm\OsmRoutingTagNormalizer.cs" />
+    <Compile Include="Osm\Relations\CycleNetworkProcessor.cs" />
+    <Compile Include="Osm\Relations\RelationTagProcessor.cs" />
     <Compile Include="Osm\RouterDbExtensions.cs" />
     <Compile Include="Osm\Streams\CoreNodeIdMap.cs" />
+    <Compile Include="Osm\Streams\ITwoPassProcessor.cs" />
     <Compile Include="Osm\Streams\NodeCoordinatesDictionary.cs" />
     <Compile Include="Osm\Streams\RouterDbStreamTarget.cs" />
     <Compile Include="Osm\Vehicles\Profiles\BicycleBalanced.cs" />
+    <Compile Include="Osm\Vehicles\Profiles\BicycleNetworks.cs" />
     <Compile Include="Osm\Vehicles\VehicleExtensions.cs" />
     <Compile Include="Profiles\Factor.cs" />
     <Compile Include="Profiles\Profile.cs" />
