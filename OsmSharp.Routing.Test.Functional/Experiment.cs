@@ -15,15 +15,22 @@ namespace OsmSharp.Routing.Test.Functional
         public static void ExperimentHere()
         {
             var routerDb = new RouterDb();
-            routerDb.LoadOsmData(File.OpenRead(@"D:\work\data\OSM\planet\europe\belgium-latest.osm.pbf"), Vehicle.Car, Vehicle.Bicycle);
+            using (var stream = File.OpenRead(@"D:\work\data\OSM\planet\europe\belgium-latest.osm.pbf"))
+            {
+                var source = new OsmSharp.Osm.PBF.Streams.PBFOsmStreamSource(stream);
+                var progress = new OsmSharp.Osm.Streams.Filters.OsmStreamFilterProgress();
+                progress.RegisterSource(source);
+                routerDb.LoadOsmData(progress, Vehicle.Car);
+            }
 
             var router = new Router(routerDb);
             
-            var loc1 = new GeoCoordinate(51.263875f, 4.785619f);
-            var loc2 = new GeoCoordinate(51.310335f, 4.889088f);
-            var shortest = router.Calculate(Vehicle.Bicycle.Shortest(), loc1, loc2);
+            // 50.779132,3.291435&loc=50.868270,3.197021
+            var loc1 = new GeoCoordinate(50.869678F, 3.551331f);
+            var loc2 = new GeoCoordinate(50.810057F, 3.388596f);
+            var shortest = router.Calculate(Vehicle.Car.Fastest(), loc1, loc2);
             var shortestJson = shortest.ToGeoJson();
-            var network = router.Calculate(Vehicle.Bicycle.Networks(), loc1, loc2);
+            var network = router.Calculate(Vehicle.Car.Classifications(), loc1, loc2);
             var networkJson = network.ToGeoJson();
         }
     }

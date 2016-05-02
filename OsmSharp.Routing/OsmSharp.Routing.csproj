@@ -130,6 +130,7 @@
     <Compile Include="Osm\Streams\RouterDbStreamTarget.cs" />
     <Compile Include="Osm\Vehicles\Profiles\BicycleBalanced.cs" />
     <Compile Include="Osm\Vehicles\Profiles\BicycleNetworks.cs" />
+    <Compile Include="Osm\Vehicles\Profiles\CarClassifications.cs" />
     <Compile Include="Osm\Vehicles\VehicleExtensions.cs" />
     <Compile Include="Profiles\Factor.cs" />
     <Compile Include="Profiles\Profile.cs" />
