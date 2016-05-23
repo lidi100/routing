@@ -242,6 +242,11 @@ namespace OsmSharp.Routing
         /// </summary>
         public void AddContracted(Profiles.Profile profile, DirectedMetaGraph contracted)
         {
+            if (!this.Supports(profile))
+            {
+                throw new ArgumentOutOfRangeException("Cannot add a contracted version of the network for an unsupported profile.");
+            }
+
             _contracted[profile.Name] = contracted;
         }
 

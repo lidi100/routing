@@ -20,7 +20,17 @@ namespace OsmSharp.Routing.Test.Functional
                 var source = new OsmSharp.Osm.PBF.Streams.PBFOsmStreamSource(stream);
                 var progress = new OsmSharp.Osm.Streams.Filters.OsmStreamFilterProgress();
                 progress.RegisterSource(source);
-                routerDb.LoadOsmData(progress, Vehicle.Car);
+                routerDb.LoadOsmData(progress, Vehicle.Car, Vehicle.Bicycle, Vehicle.Pedestrian);
+            }
+
+            routerDb.AddContracted(Vehicle.Car.Classifications());
+            routerDb.AddContracted(Vehicle.Pedestrian.Fastest());
+            routerDb.AddContracted(Vehicle.Bicycle.Fastest());
+            routerDb.AddContracted(Vehicle.Bicycle.Networks());
+
+            using (var stream = File.OpenWrite(@"belgium.a.ccpfbfbn.routing"))
+            {
+                routerDb.Serialize(stream);
             }
 
             var router = new Router(routerDb);
