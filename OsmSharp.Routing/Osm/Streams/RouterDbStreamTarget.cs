@@ -535,85 +535,93 @@ namespace OsmSharp.Routing.Osm.Streams
                             }
                             else
                             { // try and use intermediate points if any.
-                                // try and use intermediate points.
-                                var splitMeta = meta;
-                                var splitProfile = profile;
-                                var splitDistance = distance;
-                                if (intermediates.Count == 0 &&
-                                    edge != null &&
-                                    edge.Shape != null)
-                                { // no intermediates in current edge.
-                                    // save old edge data.
-                                    intermediates = new List<ICoordinate>(edge.Shape);
-                                    fromVertex = edge.From;
-                                    toVertex = edge.To;
-                                    splitMeta = edge.Data.MetaId;
-                                    splitProfile = edge.Data.Profile;
-                                    splitDistance = edge.Data.Distance;
 
-                                    // just add edge.
-                                    this.AddCoreEdge(fromVertex, toVertex, new Network.Data.EdgeData()
-                                    {
-                                        MetaId = meta,
-                                        Distance = System.Math.Max(distance, 0.0f),
-                                        Profile = (ushort)profile
-                                    }, null);
-                                }
+                                if (_allNodesAreCore)
+                                { // do nothing, expected in this case to fix the source data, we can't work around this in a reasonable way.
 
-                                if (intermediates.Count > 0)
-                                { // intermediates found, use the first intermediate as the core-node.
-                                    var newCoreVertex = _db.Network.VertexCount;
-                                    _db.Network.AddVertex(newCoreVertex, intermediates[0].Latitude, intermediates[0].Longitude);
-
-                                    // calculate new distance and update old distance.
-                                    var newDistance = (float)OsmSharp.Math.Geo.GeoCoordinate.DistanceEstimateInMeter(
-                                        _db.Network.GetVertex(fromVertex), intermediates[0]);
-                                    splitDistance -= newDistance;
-
-                                    // add first part.
-                                    this.AddCoreEdge(fromVertex, newCoreVertex, new Network.Data.EdgeData()
-                                    {
-                                        MetaId = splitMeta,
-                                        Distance = System.Math.Max(newDistance, 0.0f),
-                                        Profile = (ushort)splitProfile
-                                    }, null);
-
-                                    // add second part.
-                                    intermediates.RemoveAt(0);
-                                    this.AddCoreEdge(newCoreVertex, toVertex, new Network.Data.EdgeData()
-                                    {
-                                        MetaId = splitMeta,
-                                        Distance = System.Math.Max(splitDistance, 0.0f),
-                                        Profile = (ushort)splitProfile
-                                    }, intermediates);
                                 }
                                 else
-                                { // no intermediate or shapepoint found in either one. two identical edge overlayed with different profiles.
-                                    // add two other vertices with identical positions as the ones given.
-                                    // connect them with an edge of length '0'.
-                                    var fromLocation = _db.Network.GetVertex(fromVertex);
-                                    var newFromVertex = this.AddNewCoreNode(fromNode, fromLocation.Latitude, fromLocation.Longitude);
-                                    this.AddCoreEdge(fromVertex, newFromVertex, new EdgeData()
-                                    {
-                                        Distance = 0f,
-                                        MetaId = splitMeta,
-                                        Profile = (ushort)splitProfile
-                                    }, null);
-                                    var toLocation = _db.Network.GetVertex(toVertex);
-                                    var newToVertex = this.AddNewCoreNode(toNode, toLocation.Latitude, toLocation.Longitude);
-                                    this.AddCoreEdge(newToVertex, toVertex, new EdgeData()
-                                    {
-                                        Distance = 0f,
-                                        MetaId = splitMeta,
-                                        Profile = (ushort)splitProfile
-                                    }, null);
+                                {
+                                    // try and use intermediate points.
+                                    var splitMeta = meta;
+                                    var splitProfile = profile;
+                                    var splitDistance = distance;
+                                    if (intermediates.Count == 0 &&
+                                        edge != null &&
+                                        edge.Shape != null)
+                                    { // no intermediates in current edge.
+                                      // save old edge data.
+                                        intermediates = new List<ICoordinate>(edge.Shape);
+                                        fromVertex = edge.From;
+                                        toVertex = edge.To;
+                                        splitMeta = edge.Data.MetaId;
+                                        splitProfile = edge.Data.Profile;
+                                        splitDistance = edge.Data.Distance;
 
-                                    this.AddCoreEdge(newFromVertex, newToVertex, new EdgeData()
-                                    {
-                                        Distance = splitDistance,
-                                        MetaId = splitMeta,
-                                        Profile = (ushort)splitProfile
-                                    }, null);
+                                        // just add edge.
+                                        this.AddCoreEdge(fromVertex, toVertex, new Network.Data.EdgeData()
+                                        {
+                                            MetaId = meta,
+                                            Distance = System.Math.Max(distance, 0.0f),
+                                            Profile = (ushort)profile
+                                        }, null);
+                                    }
+
+                                    if (intermediates.Count > 0)
+                                    { // intermediates found, use the first intermediate as the core-node.
+                                        var newCoreVertex = _db.Network.VertexCount;
+                                        _db.Network.AddVertex(newCoreVertex, intermediates[0].Latitude, intermediates[0].Longitude);
+
+                                        // calculate new distance and update old distance.
+                                        var newDistance = (float)OsmSharp.Math.Geo.GeoCoordinate.DistanceEstimateInMeter(
+                                            _db.Network.GetVertex(fromVertex), intermediates[0]);
+                                        splitDistance -= newDistance;
+
+                                        // add first part.
+                                        this.AddCoreEdge(fromVertex, newCoreVertex, new Network.Data.EdgeData()
+                                        {
+                                            MetaId = splitMeta,
+                                            Distance = System.Math.Max(newDistance, 0.0f),
+                                            Profile = (ushort)splitProfile
+                                        }, null);
+
+                                        // add second part.
+                                        intermediates.RemoveAt(0);
+                                        this.AddCoreEdge(newCoreVertex, toVertex, new Network.Data.EdgeData()
+                                        {
+                                            MetaId = splitMeta,
+                                            Distance = System.Math.Max(splitDistance, 0.0f),
+                                            Profile = (ushort)splitProfile
+                                        }, intermediates);
+                                    }
+                                    else
+                                    { // no intermediate or shapepoint found in either one. two identical edge overlayed with different profiles.
+                                      // add two other vertices with identical positions as the ones given.
+                                      // connect them with an edge of length '0'.
+                                        var fromLocation = _db.Network.GetVertex(fromVertex);
+                                        var newFromVertex = this.AddNewCoreNode(fromNode, fromLocation.Latitude, fromLocation.Longitude);
+                                        this.AddCoreEdge(fromVertex, newFromVertex, new EdgeData()
+                                        {
+                                            Distance = 0f,
+                                            MetaId = splitMeta,
+                                            Profile = (ushort)splitProfile
+                                        }, null);
+                                        var toLocation = _db.Network.GetVertex(toVertex);
+                                        var newToVertex = this.AddNewCoreNode(toNode, toLocation.Latitude, toLocation.Longitude);
+                                        this.AddCoreEdge(newToVertex, toVertex, new EdgeData()
+                                        {
+                                            Distance = 0f,
+                                            MetaId = splitMeta,
+                                            Profile = (ushort)splitProfile
+                                        }, null);
+
+                                        this.AddCoreEdge(newFromVertex, newToVertex, new EdgeData()
+                                        {
+                                            Distance = splitDistance,
+                                            MetaId = splitMeta,
+                                            Profile = (ushort)splitProfile
+                                        }, null);
+                                    }
                                 }
                             }
                         }
@@ -644,6 +652,10 @@ namespace OsmSharp.Routing.Osm.Streams
         private uint AddNewCoreNode(long node, float latitude, float longitude)
         {
             var vertex = _db.Network.VertexCount;
+            if (vertex == 39732)
+            {
+                OsmSharp.Logging.Log.TraceEvent("", Logging.TraceEventType.Information, "");
+            }
             _db.Network.AddVertex(vertex, latitude, longitude);
             _coreNodeIdMap.Add(node, vertex);
             return vertex;
